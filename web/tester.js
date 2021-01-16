@@ -29,20 +29,7 @@ var tester = {
   ANALOGUE_BUTTON_THRESHOLD: .5,
 
   init: function() {
-    tester.updateMode();
     tester.updateGamepads();
-  },
-
-  /**
-   * Update the mode (visual vs. raw) if any of the radio buttons were
-   * pressed.
-   */
-  updateMode: function() {
-    if (document.querySelector('#mode-raw').checked) {
-      document.querySelector('#gamepads').classList.add('raw');
-    } else {
-      document.querySelector('#gamepads').classList.remove('raw');
-    }
   },
 
   /**
@@ -132,20 +119,6 @@ var tester = {
         buttonEl.classList.remove('pressed');
       }
     }
-
-    // Update its label.
-    var labelEl = gamepadEl.querySelector('label[for="' + id + '"]');
-    if (typeof value == 'undefined') {
-      labelEl.innerHTML = '?';
-    } else {
-      labelEl.innerHTML = value.toFixed(2);
-
-      if (value > tester.VISIBLE_THRESHOLD) {
-        labelEl.classList.add('visible');
-      } else {
-        labelEl.classList.remove('visible');
-      }
-    }
   },
 
   /**
@@ -164,30 +137,6 @@ var tester = {
         stickEl.style.marginLeft = offsetVal + 'px';
       } else {
         stickEl.style.marginTop = offsetVal + 'px';
-      }
-    }
-
-    // Update its label.
-
-    var labelEl = gamepadEl.querySelector('label[for="' + labelId + '"]');
-    if (typeof value == 'undefined') {
-      labelEl.innerHTML = '?';
-    } else {
-      labelEl.innerHTML = value.toFixed(2);
-
-      if ((value < -tester.VISIBLE_THRESHOLD) ||
-          (value > tester.VISIBLE_THRESHOLD)) {
-        labelEl.classList.add('visible');
-
-        if (value > tester.VISIBLE_THRESHOLD) {
-          labelEl.classList.add('positive');
-        } else {
-          labelEl.classList.add('negative');
-        }
-      } else {
-        labelEl.classList.remove('visible');
-        labelEl.classList.remove('positive');
-        labelEl.classList.remove('negative');
       }
     }
   }
