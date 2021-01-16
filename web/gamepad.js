@@ -15,7 +15,7 @@
  *
  * @author mwichary@google.com (Marcin Wichary)
  */
- 
+
 var gamepadSupport = {
   // A number of typical buttons recognized by Gamepad API and mapped to
   // standard controls. Any extraneous buttons will have larger indexes.
@@ -32,6 +32,8 @@ var gamepadSupport = {
   // starting at [0]) and unified between Firefox and Chrome.
   gamepads: [],
 
+  rawGamepads: [],
+
   // Remembers the connected gamepads at the last check; used in Chrome
   // to figure out when gamepads get connected or disconnected, since no
   // events are fired.
@@ -46,69 +48,40 @@ var gamepadSupport = {
    * Initialize support for Gamepad API.
    */
   init: function() {
-    var gamepadSupportAvailable = navigator.getGamepads ||
-        !!navigator.webkitGetGamepads ||
-        !!navigator.webkitGamepads;
-
-    if (!gamepadSupportAvailable) {
-      // It doesn’t seem Gamepad API is available – show a message telling
-      // the visitor about it.
-      tester.showNotSupported();
-    } else {
-      // Check and see if gamepadconnected/gamepaddisconnected is supported.
-      // If so, listen for those events and don't start polling until a gamepad
-      // has been connected.
-      if ('ongamepadconnected' in window) {
-        window.addEventListener('gamepadconnected',
-                              gamepadSupport.onGamepadConnect, false);
-        window.addEventListener('gamepaddisconnected',
-                                gamepadSupport.onGamepadDisconnect, false);
-      } else {
-        // If connection events are not supported just start polling
-        gamepadSupport.startPolling();
-      }
-    }
-  },
-
-  /**
-   * React to the gamepad being connected.
-   */
-  onGamepadConnect: function(event) {
-    // Add the new gamepad on the list of gamepads to look after.
-    gamepadSupport.gamepads.push(event.gamepad);
-
-    // Ask the tester to update the screen to show more gamepads.
-    tester.updateGamepads(gamepadSupport.gamepads);
-
-    // Start the polling loop to monitor button changes.
     gamepadSupport.startPolling();
-  },
-
-  /**
-   * React to the gamepad being disconnected.
-   */
-  onGamepadDisconnect: function(event) {
-    // Remove the gamepad from the list of gamepads to monitor.
-    for (var i in gamepadSupport.gamepads) {
-      if (gamepadSupport.gamepads[i].index == event.gamepad.index) {
-        gamepadSupport.gamepads.splice(i, 1);
-        break;
-      }
-    }
-
-    // If no gamepads are left, stop the polling loop.
-    if (gamepadSupport.gamepads.length == 0) {
-      gamepadSupport.stopPolling();
-    }
-
-    // Ask the tester to update the screen to remove the gamepad.
-    tester.updateGamepads(gamepadSupport.gamepads);
   },
 
   /**
    * Starts a polling loop to check for gamepad state.
    */
   startPolling: function() {
+
+    gamepadSupport.rawGamepads = [{
+      id: '123',
+      index: 0,
+      buttons: [0, 0, 0, 0, 0, 0, 0, 0],
+      axes: [0, 0, 0, 0],
+      timestamp: 0
+    }];
+
+    tester.updateGamepads(gamepadSupport.gamepads);
+
+    var ws = new WebSocket("ws://127.0.0.1:8765/");
+    ws.onmessage = function (event) {
+      var gamepad = gamepadSupport.rawGamepads[0];
+      var data = JSON.parse(event.data);
+      var controls = data.ctrl;
+      gamepad.buttons[0] = controls.jm;
+      gamepad.buttons[1] = controls.bs;
+      gamepad.buttons[4] = -controls.th;
+      gamepad.buttons[5] = controls.th;
+      gamepad.axes[0] = controls.st || controls.yw;
+      gamepad.axes[1] = controls.pt;
+      gamepad.axes[2] = controls.rl;
+
+      gamepad.timestamp += 1;
+    };
+
     // Don’t accidentally start a second loop, man.
     if (!gamepadSupport.ticking) {
       gamepadSupport.ticking = true;
@@ -183,14 +156,7 @@ var gamepadSupport = {
   // connection/disconnection events, but requires you to monitor
   // an array for changes.
   pollGamepads: function() {
-    // Get the array of gamepads – the first method (getGamepads)
-    // is the most modern one and is supported by Firefox 28+ and
-    // Chrome 35+. The second one (webkitGetGamepads) is a deprecated method
-    // used by older Chrome builds.
-    var rawGamepads =
-        (navigator.getGamepads && navigator.getGamepads()) ||
-        (navigator.webkitGetGamepads && navigator.webkitGetGamepads());
-
+    var rawGamepads = gamepadSupport.rawGamepads;
     if (rawGamepads) {
       // We don’t want to use rawGamepads coming straight from the browser,
       // since it can have “holes” (e.g. if you plug two gamepads, and then

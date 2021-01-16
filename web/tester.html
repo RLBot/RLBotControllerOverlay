@@ -24,28 +24,14 @@
 
 <script src='gamepad.js'></script>
 <script src='tester.js'></script>
+<script src='rlbot_generated.js'></script>
 <link href='styles.css' rel='stylesheet'></link>
 
-<h1>
-  Gamepad API tester
-</h1>
-<h2>
-  Part of <a href='../'>the article</a> explaining Gamepad API.
-</h2>
 <div id='menu'>
   <input type='radio' name='mode' value='visual' id='mode-visual' checked><label
       for='mode-visual'>Visual mode</label>
   <input type='radio' name='mode' value='raw' id='mode-raw'><label
       for='mode-raw'>Raw mode</label>
-</div>
-
-<div id='no-gamepad-support'>
-  Your browser does not seem to support Gamepad API, or it might be
-  we’re not detecting it very well. Sorry!
-</div>
-<div id='no-gamepads-connected'>
-  No gamepads seem to be connected. Be sure to plug in a gamepad and then
-  press any of its buttons to activate it.
 </div>
 
 <ul id='gamepads'>
@@ -111,12 +97,6 @@
   if (window !== top) {
     document.body.classList.add('iframe');
   }
-
-  // Attach event listeners to mode radio buttons
-  document.querySelector('#mode-visual').
-      addEventListener('click', tester.updateMode, false);
-  document.querySelector('#mode-raw').
-      addEventListener('click', tester.updateMode, false);
 
   tester.init();
   gamepadSupport.init();

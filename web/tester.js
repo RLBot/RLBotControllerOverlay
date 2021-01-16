@@ -34,13 +34,6 @@ var tester = {
   },
 
   /**
-   * Tell the user the browser doesn’t support Gamepad API.
-   */
-  showNotSupported: function() {
-    document.querySelector('#no-gamepad-support').classList.add('visible');
-  },
-
-  /**
    * Update the mode (visual vs. raw) if any of the radio buttons were
    * pressed.
    */
@@ -108,12 +101,6 @@ var tester = {
           padsConnected = true;
         }
       }
-    }
-
-    if (padsConnected) {
-      document.querySelector('#no-gamepads-connected').classList.remove('visible');
-    } else {
-      document.querySelector('#no-gamepads-connected').classList.add('visible');
     }
   },
 
