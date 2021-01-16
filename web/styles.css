@@ -65,7 +65,7 @@ body {
   color: rgb(120, 120, 120);
 }
 
-#gamepads > li > .name {
+#gamepads > li > .nameplate {
   position: absolute;
   left: 385px;
   right: 352px;
@@ -76,7 +76,7 @@ body {
   z-index: 500;
 
   font-family: Roboto, Arial;
-  font-size: 13px;
+  font-size: 16px;
   font-weight: bold;
   color: rgb(224, 224, 224);
   text-shadow: 0 0 1px rgb(192, 192, 192);
