@@ -51,6 +51,37 @@ var gamepadSupport = {
     gamepadSupport.startPolling();
   },
 
+  connect: function () {
+    var ws = new WebSocket("ws://127.0.0.1:8765/");
+
+    ws.onmessage = function(event) {
+      var gamepad = gamepadSupport.rawGamepads[0];
+      var data = JSON.parse(event.data);
+      var controls = data.ctrl;
+      gamepad.buttons[0] = controls.jm;
+      gamepad.buttons[1] = controls.bs;
+      gamepad.buttons[4] = -controls.th;
+      gamepad.buttons[5] = controls.th;
+      gamepad.axes[0] = controls.st || controls.yw;
+      gamepad.axes[1] = controls.pt;
+      gamepad.axes[2] = controls.rl;
+
+      gamepad.timestamp += 1;
+    };
+
+    ws.onclose = function(e) {
+      console.log('Socket is closed. Reconnect will be attempted in 1 second.', e.reason);
+      setTimeout(function() {
+        gamepadSupport.connect();
+      }, 1000);
+    };
+
+    ws.onerror = function(err) {
+      console.error('Socket encountered error: ', err.message, 'Closing socket');
+      ws.close();
+    };
+  },
+
   /**
    * Starts a polling loop to check for gamepad state.
    */
@@ -66,21 +97,7 @@ var gamepadSupport = {
 
     tester.updateGamepads(gamepadSupport.gamepads);
 
-    var ws = new WebSocket("ws://127.0.0.1:8765/");
-    ws.onmessage = function (event) {
-      var gamepad = gamepadSupport.rawGamepads[0];
-      var data = JSON.parse(event.data);
-      var controls = data.ctrl;
-      gamepad.buttons[0] = controls.jm;
-      gamepad.buttons[1] = controls.bs;
-      gamepad.buttons[4] = -controls.th;
-      gamepad.buttons[5] = controls.th;
-      gamepad.axes[0] = controls.st || controls.yw;
-      gamepad.axes[1] = controls.pt;
-      gamepad.axes[2] = controls.rl;
-
-      gamepad.timestamp += 1;
-    };
+    gamepadSupport.connect();
 
     // Don’t accidentally start a second loop, man.
     if (!gamepadSupport.ticking) {
