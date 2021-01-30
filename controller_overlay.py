@@ -15,6 +15,8 @@ class SampleScript:
         self.socket_relay = SocketRelayAsyncio()
         self.connected_websockets: Set[websockets.WebSocketServerProtocol] = set()
         self.round_active = False
+        self.focused_player_index = 0
+        self.players_list = []
 
     def send_dict(self, data: Dict):
         data_string = json.dumps(data)
@@ -24,6 +26,7 @@ class SampleScript:
 
     def handle_spectate(self, spectate: PlayerSpectate, seconds: float, frame_num: int):
         print(f'Spectating player index {spectate.PlayerIndex()}')
+        self.focused_player_index = spectate.PlayerIndex()
         self.send_dict({
             'spectating': spectate.PlayerIndex()
         })
@@ -36,27 +39,29 @@ class SampleScript:
                 p = packet.Players(i)
                 players.append({'name': p.Name().decode('utf-8')})
 
+            self.players_list = players
             self.send_dict({
                 'players': players
             })
         self.round_active = active
 
     def input_change(self, change: PlayerInputChange, seconds: float, frame_num: int):
-        cs = change.ControllerState()
-        self.send_dict({
-            'idx': change.PlayerIndex(),
-            'ctrl': {
-                'jm': 1 if cs.Jump() else 0,
-                'st': cs.Steer(),
-                'th': cs.Throttle(),
-                'pt': cs.Pitch(),
-                'yw': cs.Yaw(),
-                'rl': cs.Roll(),
-                'bs': 1 if cs.Boost() else 0,
-                'hb': 1 if cs.Handbrake() else 0,
-                'us': 1 if cs.UseItem() else 0
-            }
-        })
+        if change.PlayerIndex() == self.focused_player_index:
+            cs = change.ControllerState()
+            self.send_dict({
+                'idx': change.PlayerIndex(),
+                'ctrl': {
+                    'jm': 1 if cs.Jump() else 0,
+                    'st': cs.Steer(),
+                    'th': cs.Throttle(),
+                    'pt': cs.Pitch(),
+                    'yw': cs.Yaw(),
+                    'rl': cs.Roll(),
+                    'bs': 1 if cs.Boost() else 0,
+                    'hb': 1 if cs.Handbrake() else 0,
+                    'us': 1 if cs.UseItem() else 0
+                }
+            })
 
     def run(self):
         self.socket_relay.player_spectate_handlers.append(self.handle_spectate)
@@ -72,6 +77,12 @@ class SampleScript:
 
     async def handle_connection(self, websocket, path):
         self.connected_websockets.add(websocket)
+        self.send_dict({
+            'spectating': self.focused_player_index
+        })
+        self.send_dict({
+            'players': self.players_list
+        })
         async for message in websocket:
             print(message)
 

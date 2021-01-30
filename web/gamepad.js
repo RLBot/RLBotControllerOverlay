@@ -34,6 +34,8 @@ var gamepadSupport = {
 
   rawGamepads: [],
 
+  focusedGamepadIndex: 0,
+
   // Remembers the connected gamepads at the last check; used in Chrome
   // to figure out when gamepads get connected or disconnected, since no
   // events are fired.
@@ -62,22 +64,22 @@ var gamepadSupport = {
           var p = data.players[i];
           if (!gamepadSupport.rawGamepads[i]) {
             gamepadSupport.rawGamepads[i] = {
-              id: p.name,
-              index: i,
+              name: p.name,
+              playerIndex: i,
               buttons: [0, 0, 0, 0, 0, 0, 0, 0],
               axes: [0, 0, 0, 0],
               timestamp: 0
             }
           }
-          gamepadSupport.rawGamepads[i].id = p.name;
+          gamepadSupport.rawGamepads[i].name = p.name;
         }
-      } else if (data.spectating) {
-
+      } else if (Number.isInteger(data.spectating)) {
+        gamepadSupport.focusedGamepadIndex = data.spectating;
       } else if (data.ctrl) {
         if (!gamepadSupport.rawGamepads[data.idx]) {
           gamepadSupport.rawGamepads[data.idx] = {
-            id: 'Unknown',
-            index: data.idx,
+            name: 'Unknown',
+            playerIndex: data.idx,
             buttons: [0, 0, 0, 0, 0, 0, 0, 0],
             axes: [0, 0, 0, 0],
             timestamp: 0
@@ -194,29 +196,16 @@ var gamepadSupport = {
   pollGamepads: function() {
     var rawGamepads = gamepadSupport.rawGamepads;
     if (rawGamepads) {
-      // We don’t want to use rawGamepads coming straight from the browser,
-      // since it can have “holes” (e.g. if you plug two gamepads, and then
-      // unplug the first one, the remaining one will be at index [1]).
-      gamepadSupport.gamepads = [];
-
-      var gamepadsChanged = false;
-
-      for (var i = 0; i < rawGamepads.length; i++) {
-        if (gamepadSupport.prevRawGamepadTypes.length <= i ||
-            rawGamepads[i].id !== gamepadSupport.prevRawGamepadTypes[i]) {
-          gamepadsChanged = true;
-          gamepadSupport.prevRawGamepadTypes[i] = rawGamepads[i].id;
+      var rawGamepad = rawGamepads[gamepadSupport.focusedGamepadIndex];
+      if (rawGamepad) {
+        var currentName = '';
+        if (gamepadSupport.gamepads.length) {
+          currentName = gamepadSupport.gamepads[0].name;
         }
-
-        if (rawGamepads[i]) {
-          gamepadSupport.gamepads.push(rawGamepads[i]);
+        gamepadSupport.gamepads = [rawGamepad];
+        if (currentName !== rawGamepad.name) {
+          tester.updateGamepads(gamepadSupport.gamepads);
         }
-      }
-
-      // Ask the tester to refresh the visual representations of gamepads
-      // on the screen.
-      if (gamepadsChanged) {
-        tester.updateGamepads(gamepadSupport.gamepads);
       }
     }
   },

@@ -37,6 +37,7 @@ var tester = {
    * template.
    */
   updateGamepads: function(gamepads) {
+    console.log('Remaking gamepads');
     var els = document.querySelectorAll('#gamepads > :not(.template)');
     for (var i = 0, el; el = els[i]; i++) {
       el.parentNode.removeChild(el);
@@ -56,8 +57,8 @@ var tester = {
               document.querySelector('#gamepads > .template').innerHTML;
 
           el.id = 'gamepad-' + i;
-          el.querySelector('.nameplate').innerHTML = gamepad.id;
-          el.querySelector('.index').innerHTML = gamepad.index;
+          el.querySelector('.nameplate').innerHTML = gamepad.name;
+          el.querySelector('.index').innerHTML = gamepad.playerIndex;
 
           document.querySelector('#gamepads').appendChild(el);
 
