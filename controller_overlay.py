@@ -1,34 +1,49 @@
-from typing import Set
+import asyncio
+import json
+from typing import Set, Dict
 
-from rlbot.agents.base_agent import SimpleControllerState
+import websockets
+from rlbot.messages.flat.GameTickPacket import GameTickPacket
 from rlbot.messages.flat.PlayerInputChange import PlayerInputChange
 from rlbot.messages.flat.PlayerSpectate import PlayerSpectate
-from rlbot.messages.flat.PlayerStatEvent import PlayerStatEvent
 from rlbot.socket.socket_manager_asyncio import SocketRelayAsyncio
-import asyncio
-import websockets
-import json
+
 
 class SampleScript:
 
     def __init__(self):
         self.socket_relay = SocketRelayAsyncio()
         self.connected_websockets: Set[websockets.WebSocketServerProtocol] = set()
+        self.round_active = False
+
+    def send_dict(self, data: Dict):
+        data_string = json.dumps(data)
+        self.connected_websockets = {s for s in self.connected_websockets if s.open}
+        for socket in self.connected_websockets:
+            asyncio.create_task(socket.send(data_string))
 
     def handle_spectate(self, spectate: PlayerSpectate, seconds: float, frame_num: int):
         print(f'Spectating player index {spectate.PlayerIndex()}')
-        # Make the bot jump whenever we start spectating them >:)
-        controls = SimpleControllerState()
-        controls.jump = True
-        self.socket_relay.send_player_input(spectate.PlayerIndex(), controls)
+        self.send_dict({
+            'spectating': spectate.PlayerIndex()
+        })
 
-    def handle_stat(self, stat: PlayerStatEvent, seconds: float, frame_num: int):
-        stat_value = stat.StatType().decode('utf-8')
-        print(f'Stat player index {stat.PlayerIndex()}: {stat_value}')
+    def handle_packet(self, packet: GameTickPacket):
+        active = packet.GameInfo().IsRoundActive()
+        if active and not self.round_active:
+            players = []
+            for i in range(packet.PlayersLength()):
+                p = packet.Players(i)
+                players.append({'name': p.Name().decode('utf-8')})
+
+            self.send_dict({
+                'players': players
+            })
+        self.round_active = active
 
     def input_change(self, change: PlayerInputChange, seconds: float, frame_num: int):
         cs = change.ControllerState()
-        data = json.dumps({
+        self.send_dict({
             'idx': change.PlayerIndex(),
             'ctrl': {
                 'jm': 1 if cs.Jump() else 0,
@@ -43,29 +58,22 @@ class SampleScript:
             }
         })
 
-        self.connected_websockets = {s for s in self.connected_websockets if s.open}
-        for socket in self.connected_websockets:
-            asyncio.create_task(socket.send(data))
-        if change.ControllerState().Jump():
-            print(f'Player index {change.PlayerIndex()} is jumping!')
-
     def run(self):
         self.socket_relay.player_spectate_handlers.append(self.handle_spectate)
-        self.socket_relay.player_stat_handlers.append(self.handle_stat)
         self.socket_relay.player_input_change_handlers.append(self.input_change)
+        self.socket_relay.packet_handlers.append(self.handle_packet)
 
-        relay_future = self.socket_relay.connect_and_run(wants_quick_chat=True, wants_game_messages=True, wants_ball_predictions=True)
+        relay_future = self.socket_relay.connect_and_run(wants_quick_chat=True, wants_game_messages=True,
+                                                         wants_ball_predictions=True)
         start_server = websockets.serve(self.handle_connection, "localhost", 8765)
         asyncio.get_event_loop().run_until_complete(start_server)
         asyncio.get_event_loop().run_until_complete(relay_future)
         asyncio.get_event_loop().run_forever()
 
-
     async def handle_connection(self, websocket, path):
         self.connected_websockets.add(websocket)
         async for message in websocket:
             print(message)
-
 
 
 # You can use this __name__ == '__main__' thing to ensure that the script doesn't start accidentally if you

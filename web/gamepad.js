@@ -55,18 +55,45 @@ var gamepadSupport = {
     var ws = new WebSocket("ws://127.0.0.1:8765/");
 
     ws.onmessage = function(event) {
-      var gamepad = gamepadSupport.rawGamepads[0];
       var data = JSON.parse(event.data);
-      var controls = data.ctrl;
-      gamepad.buttons[0] = controls.jm;
-      gamepad.buttons[1] = controls.bs;
-      gamepad.buttons[4] = -controls.th;
-      gamepad.buttons[5] = controls.th;
-      gamepad.axes[0] = controls.st || controls.yw;
-      gamepad.axes[1] = controls.pt;
-      gamepad.axes[2] = controls.rl;
 
-      gamepad.timestamp += 1;
+      if (data.players) {
+        for (var i = 0; i < data.players.length; i++) {
+          var p = data.players[i];
+          if (!gamepadSupport.rawGamepads[i]) {
+            gamepadSupport.rawGamepads[i] = {
+              id: p.name,
+              index: i,
+              buttons: [0, 0, 0, 0, 0, 0, 0, 0],
+              axes: [0, 0, 0, 0],
+              timestamp: 0
+            }
+          }
+          gamepadSupport.rawGamepads[i].id = p.name;
+        }
+      } else if (data.spectating) {
+
+      } else if (data.ctrl) {
+        if (!gamepadSupport.rawGamepads[data.idx]) {
+          gamepadSupport.rawGamepads[data.idx] = {
+            id: 'Unknown',
+            index: data.idx,
+            buttons: [0, 0, 0, 0, 0, 0, 0, 0],
+            axes: [0, 0, 0, 0],
+            timestamp: 0
+          }
+        }
+        var gamepad = gamepadSupport.rawGamepads[data.idx];
+        var controls = data.ctrl;
+        gamepad.buttons[0] = controls.jm;
+        gamepad.buttons[1] = controls.bs;
+        gamepad.buttons[4] = -controls.th;
+        gamepad.buttons[5] = controls.th;
+        gamepad.axes[0] = controls.st || controls.yw;
+        gamepad.axes[1] = controls.pt;
+        gamepad.axes[2] = controls.rl;
+        gamepad.timestamp += 1;
+      }
     };
 
     ws.onclose = function(e) {
@@ -86,14 +113,6 @@ var gamepadSupport = {
    * Starts a polling loop to check for gamepad state.
    */
   startPolling: function() {
-
-    gamepadSupport.rawGamepads = [{
-      id: '123',
-      index: 0,
-      buttons: [0, 0, 0, 0, 0, 0, 0, 0],
-      axes: [0, 0, 0, 0],
-      timestamp: 0
-    }];
 
     tester.updateGamepads(gamepadSupport.gamepads);
 
@@ -151,7 +170,7 @@ var gamepadSupport = {
     // only on Chrome.
     gamepadSupport.pollGamepads();
 
-    for (var i in gamepadSupport.gamepads) {
+    for (var i = 0; i < gamepadSupport.gamepads.length; i++) {
       var gamepad = gamepadSupport.gamepads[i];
 
       // Don’t do anything if the current timestamp is the same as previous
@@ -160,7 +179,7 @@ var gamepadSupport = {
       // makes sure we’re not doing anything if the timestamps are empty
       // or undefined.
       if (gamepad.timestamp &&
-          (gamepad.timestamp == gamepadSupport.prevTimestamps[i])) {
+          (gamepad.timestamp === gamepadSupport.prevTimestamps[i])) {
         continue;
       }
       gamepadSupport.prevTimestamps[i] = gamepad.timestamp;
@@ -180,15 +199,13 @@ var gamepadSupport = {
       // unplug the first one, the remaining one will be at index [1]).
       gamepadSupport.gamepads = [];
 
-      // We only refresh the display when we detect some gamepads are new
-      // or removed; we do it by comparing raw gamepad table entries to
-      // “undefined.”
       var gamepadsChanged = false;
 
       for (var i = 0; i < rawGamepads.length; i++) {
-        if (typeof rawGamepads[i] != gamepadSupport.prevRawGamepadTypes[i]) {
+        if (gamepadSupport.prevRawGamepadTypes.length <= i ||
+            rawGamepads[i].id !== gamepadSupport.prevRawGamepadTypes[i]) {
           gamepadsChanged = true;
-          gamepadSupport.prevRawGamepadTypes[i] = typeof rawGamepads[i];
+          gamepadSupport.prevRawGamepadTypes[i] = rawGamepads[i].id;
         }
 
         if (rawGamepads[i]) {
