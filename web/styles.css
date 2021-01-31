@@ -67,9 +67,9 @@ body {
 
 #gamepads > li > .nameplate {
   position: absolute;
-  left: 385px;
+  left: 270px;
   right: 352px;
-  top: 154px;
+  top: 208px;
   height: 30px;
   line-height: 30px;
 
@@ -93,9 +93,6 @@ body {
 
   opacity: 0;
 }
-#gamepads > li > .buttons > .pressed::after {
-  opacity: .5;
-}
 #gamepads > li > .buttons > .top-shoulder {
   width: 170px;
   height: 70px;
@@ -110,12 +107,12 @@ body {
   background-image: url(images/shoulder-top.png);
 }
 #gamepads > li > .buttons > [name='button-left-shoulder-top'] {
-  left: 185px;
-  top: 66px;
+  left: 195px;
+  top: 76px;
 }
 #gamepads > li > .buttons > [name='button-right-shoulder-top'] {
-  left: 618px;
-  top: 64px;
+  left: 610px;
+  top: 76px;
 }
 #gamepads > li > .buttons > .top-shoulder.pressed {
   margin-top: 5px;
@@ -145,14 +142,14 @@ body {
   margin-top: 5px;
 }
 #gamepads > li > .buttons > .face {
-  width: 50px;
-  height: 50px;
+  width: 80px;
+  height: 80px;
 
   z-index: 300;
 
   position: absolute;
 
-  background-size: 42px 42px;
+  background-size: 70px 70px;
   background-repeat: no-repeat;
   background-position: 50%;
 }
@@ -163,24 +160,39 @@ body {
   bottom: 5px;
 }
 #gamepads > li > .buttons > [name='button-1'] {
-  left: 676px;
-  top: 241px;
-  background-image: url(images/button-0.png);
+  left: 660px;
+  top: 247px;
+  background-image: url(images/jump.png);
 }
+#gamepads > li > .buttons > [name='button-1'].pressed {
+  background-image: url(images/jump-pressed.png);
+}
+
 #gamepads > li > .buttons > [name='button-2'] {
-  left: 718px;
-  top: 200px;
-  background-image: url(images/button-1.png);
+  left: 727px;
+  top: 195px;
+  background-image: url(images/boost.png);
 }
+#gamepads > li > .buttons > [name='button-2'].pressed {
+  background-image: url(images/boost-pressed.png);
+}
+
 #gamepads > li > .buttons > [name='button-3'] {
-  left: 635px;
-  top: 200px;
-  background-image: url(images/button-2.png);
+  left: 591px;
+  top: 195px;
+  background-image: url(images/drift.png);
 }
+#gamepads > li > .buttons > [name='button-3'].pressed {
+  background-image: url(images/drift-pressed.png);
+}
+
 #gamepads > li > .buttons > [name='button-4'] {
-  left: 677px;
-  top: 158px;
-  background-image: url(images/button-3.png);
+  left: 659px;
+  top: 142px;
+  background-image: url(images/item.png);
+}
+#gamepads > li > .buttons > [name='button-4'].pressed {
+  background-image: url(images/item-pressed.png);
 }
 
 #gamepads > li > .buttons > [name='button-dpad-bottom'] {

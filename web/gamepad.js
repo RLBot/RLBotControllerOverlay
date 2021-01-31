@@ -50,6 +50,13 @@ var gamepadSupport = {
    * Initialize support for Gamepad API.
    */
   init: function() {
+    gamepadSupport.rawGamepads[0] = {
+      name: 'Unknown',
+      playerIndex: 0,
+      buttons: [0, 0, 0, 0, 0, 0, 0, 0],
+      axes: [0, 0, 0, 0],
+      timestamp: 0
+    }
     gamepadSupport.startPolling();
   },
 
@@ -89,6 +96,8 @@ var gamepadSupport = {
         var controls = data.ctrl;
         gamepad.buttons[0] = controls.jm;
         gamepad.buttons[1] = controls.bs;
+        gamepad.buttons[2] = controls.hb;
+        gamepad.buttons[3] = controls.us;
         gamepad.buttons[4] = -controls.th;
         gamepad.buttons[5] = controls.th;
         gamepad.axes[0] = controls.st || controls.yw;
