@@ -1,5 +1,7 @@
 import asyncio
 import json
+import webbrowser
+from pathlib import Path
 from typing import Set, Dict
 
 import websockets
@@ -73,6 +75,7 @@ class SampleScript:
         start_server = websockets.serve(self.handle_connection, "localhost", 8765)
         asyncio.get_event_loop().run_until_complete(start_server)
         asyncio.get_event_loop().run_until_complete(relay_future)
+        webbrowser.open_new(Path(__file__).parent / 'web' / 'tester.html')
         asyncio.get_event_loop().run_forever()
 
     async def handle_connection(self, websocket, path):

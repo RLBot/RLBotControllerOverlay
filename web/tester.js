@@ -58,7 +58,6 @@ var tester = {
 
           el.id = 'gamepad-' + i;
           el.querySelector('.nameplate').innerHTML = gamepad.name;
-          el.querySelector('.index').innerHTML = gamepad.playerIndex;
 
           document.querySelector('#gamepads').appendChild(el);
 
